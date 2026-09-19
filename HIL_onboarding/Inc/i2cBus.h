@@ -8,6 +8,7 @@
 #ifndef I2C_BUS_H
 #define I2C_BUS_H
 
+#include "stdint.h"
 #include "stm32f7xx_hal.h"
 
 typedef enum {
