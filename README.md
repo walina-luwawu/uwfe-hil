@@ -1,4 +1,3 @@
-<<<<<<< HEAD
-# UWFE Hardware-in-the-Loop
+# UWFE Firmware Onboarding 2027
 
-The onboarding project for the UWFE firmware subteam.
+My onboarding project for the firmware team at University of Waterloo Formula Electric (UWFE).
