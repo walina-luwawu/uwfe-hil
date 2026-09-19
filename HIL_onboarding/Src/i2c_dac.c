@@ -40,8 +40,8 @@
 #define MCP4728_C0 0U
 #define MCP4728_W1 0U
 #define MCP4728_W0 0U
-#define MCP4728_DAC1 ???
-#define MCP4728_DAC0 ???
+#define MCP4728_DAC1 2U
+#define MCP4728_DAC0 2U
 #define MCP4728_UDAC 1U
 #define MCP4728_VREF 0U
 #define MCP4728_PD1 0U
@@ -67,15 +67,16 @@ static HAL_StatusTypeDef buildOutputFrame(uint16_t code, I2cDacFrame_t *frame)
     //D11:D0 is essentially your code. That is what you are setting.
     //The I2C address is not part of this frame, transmitFrame sends it separately.
 
-    frame->bytes[0];
-    frame->bytes[1];
-    frame->bytes[2];
-    frame->bytes[3];
-    frame->bytes[4];
-    frame->bytes[5];
-    frame->bytes[6];
-    frame->length = 7U;
-    return HAL_ERROR;
+    for (uint8_t i = 0U; i < 12; ++i) {
+        frame->bytes[i] = (code & (1 << i)) >> i;
+    }
+
+    frame->bytes[12] = MCP4728_GX;
+    frame->bytes[13] = MCP4728_PD0;
+    frame->bytes[14] = MCP4728_PD1;
+    frame->bytes[15] = MCP4728_VREF;
+    frame->length = 16U;
+    return HAL_OK;
 }
 
 static HAL_StatusTypeDef transmitFrame(const I2cDacFrame_t *frame)
@@ -89,7 +90,43 @@ static HAL_StatusTypeDef transmitFrame(const I2cDacFrame_t *frame)
     //TIP: look up HAL_I2C_Master_Transmit. It sends the address byte itself and
     //wants the 7 bit address shifted left by one. Use I2C_DAC_TIMEOUT_MS.
 
-    return HAL_ERROR;
+    int8_t devAddress = I2C_DAC_ADDRESS7 << 1U; 
+
+    uint8_t data [48];
+    // Write mode configuration
+    data[47] = MCP4728_C2;
+    data[46] = MCP4728_C1;
+    data[45] = MCP4728_C0;
+    data[44] - MCP4728_W1;
+    data[43] - MCP4728_W0;
+    // Channel A address bits
+    data[42] = MCP4728_DAC1 << 1;
+    data[41] = MCP4728_DAC0  << 1;
+    // Output/storage bit
+    data[40] = MCP4728_UDAC;
+    // Copy frame for Channel A output
+    for (uint8_t i = 24; i < 40; ++i) {
+        data[i] = frame->bytes[i - 24];
+    }
+    // Channel B dont-cares
+    data[23] = 0U;
+    data[22] = 0U;
+    data[21] = 0U;
+    data[20] - 0U;
+    data[19] - 0U;
+    // Channel B address bits
+    data[18] = MCP4728_DAC1 << 1;
+    data[17] = MCP4728_DAC0 >> 1;
+    // Output/storage bit
+    data[16] = MCP4728_UDAC;
+    // Copy frame for Channel B output
+    for (uint8_t i = 0U; i < 16; ++i) {
+        data[i] = frame->bytes[i];
+    }
+
+    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c1, devAddress, data, 6, I2C_DAC_TIMEOUT_MS);
+
+    return status;
 }
 
 static HAL_StatusTypeDef activateDAC(void)
@@ -101,12 +138,13 @@ static HAL_StatusTypeDef activateDAC(void)
     //pin should be left in for the next write.
 
     // assert
-
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_10, GPIO_PIN_RESET);
     // wait
-
+    HAL_Delay(T_LDAC_MS);
     // release
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_10, GPIO_PIN_SET);
 
-    return HAL_ERROR;
+    return HAL_OK;
 }
 
 HAL_StatusTypeDef i2cDacInit(void)
