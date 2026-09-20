@@ -76,6 +76,7 @@ static HAL_StatusTypeDef buildOutputFrame(uint16_t code, I2cDacFrame_t *frame)
     frame->bytes[14] = MCP4728_PD1;
     frame->bytes[15] = MCP4728_VREF;
     frame->length = 16U;
+    
     return HAL_OK;
 }
 
@@ -124,9 +125,7 @@ static HAL_StatusTypeDef transmitFrame(const I2cDacFrame_t *frame)
         data[i] = frame->bytes[i];
     }
 
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c1, devAddress, data, 6, I2C_DAC_TIMEOUT_MS);
-
-    return status;
+    return HAL_I2C_Master_Transmit(&hi2c1, devAddress, data, 6, I2C_DAC_TIMEOUT_MS);
 }
 
 static HAL_StatusTypeDef activateDAC(void)

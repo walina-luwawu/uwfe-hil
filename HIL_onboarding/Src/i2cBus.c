@@ -54,3 +54,35 @@ HAL_StatusTypeDef i2cIsDeviceReady(I2cBus_t bus, uint16_t devAddress)
 
     return HAL_I2C_IsDeviceReady(handle, devAddress, I2C_READY_TRIALS, I2C_TIMEOUT_MS);
 }
+
+HAL_StatusTypeDef i2cWrite(I2cBus_t bus, uint16_t devAddress, uint8_t *data, uint16_t length)
+{
+    I2C_HandleTypeDef *handle = getI2CHandle(bus);
+
+    return HAL_I2C_Master_Transmit(handle, devAddress, data, length, I2C_TIMEOUT_MS);
+}
+
+HAL_StatusTypeDef i2cRead(I2cBus_t bus, uint16_t devAddress, uint8_t *data, uint16_t length)
+{
+    I2C_HandleTypeDef *handle = getI2CHandle(bus);
+
+    return HAL_I2C_Master_Receive(handle, devAddress, data, length, I2C_TIMEOUT_MS);
+}
+
+HAL_StatusTypeDef i2cWriteReg(I2cBus_t bus, uint16_t devAddress, uint8_t reg, uint8_t *data, uint16_t length)
+{
+    I2C_HandleTypeDef *handle = getI2CHandle(bus);
+
+    return HAL_I2C_Mem_Write(
+        handle, devAddress, reg, I2C_MEMADD_SIZE_8BIT, data, length, I2C_TIMEOUT_MS
+    );
+}
+
+HAL_StatusTypeDef i2cReadReg(I2cBus_t bus, uint16_t devAddress, uint8_t reg, uint8_t *data, uint16_t length)
+{
+    I2C_HandleTypeDef *handle = getI2CHandle(bus);
+
+    return HAL_I2C_Mem_Read(
+        handle, devAddress, reg, I2C_MEMADD_SIZE_8BIT, data, length, I2C_TIMEOUT_MS
+    );
+}
